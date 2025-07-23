@@ -1,57 +1,93 @@
-
 import csv
+import datetime
 import os
-from flask import Flask, render_template, request
+import time
+from threading import Thread
+
+import pytz
+from flask import Flask, jsonify, render_template, request, send_file
 
 app = Flask(__name__)
 
-# Path to store the CSV log file
-csv_file = "logs.csv"
+PAKISTAN_TZ = pytz.timezone('Asia/Karachi')
 
-# Create the CSV file with headers if it doesn't exist
-if not os.path.exists(csv_file):
-    with open(csv_file, mode='w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(
-            ["Device ID", "Phone Number", "Message Type", "WhatsApp Type", "Timestamp"])
+
+def get_today_log_filename():
+    today = datetime.datetime.now(PAKISTAN_TZ).strftime('%Y-%m-%d')
+    return f"log_{today}.txt"
+
+
+def ensure_log_file():
+    filename = get_today_log_filename()
+    if not os.path.exists(filename):
+        with open(filename, 'w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerow([
+                "Device ID", "WhatsApp Type", "Number", "Message Type",
+                "Timestamp"
+            ])
+
+
+def rotate_log_daily():
+    while True:
+        now = datetime.datetime.now(PAKISTAN_TZ)
+        next_midnight = (now + datetime.timedelta(days=1)).replace(
+            hour=0, minute=0, second=0, microsecond=0)
+        seconds_until_midnight = (next_midnight - now).total_seconds()
+        time.sleep(seconds_until_midnight + 1)
+        ensure_log_file()
+
 
 @app.route('/')
 def index():
-    # Read logs from CSV file
-    logs = []
-    if os.path.exists(csv_file):
-        with open(csv_file, mode='r') as file:
-            reader = csv.reader(file)
-            next(reader)  # Skip header row
-            logs = list(reader)
-    
-    return render_template('logs.html', logs=logs)
+    filename = get_today_log_filename()
+    if not os.path.exists(filename):
+        return render_template("index.html", headers=[], data=[])
+
+    with open(filename, 'r', encoding='utf-8') as file:
+        reader = csv.reader(file)
+        rows = list(reader)
+        if not rows:
+            return render_template("index.html", headers=[], data=[])
+
+        headers = rows[0]
+        data = rows[1:]
+    return render_template("index.html", headers=headers, data=data)
+
 
 @app.route('/log', methods=['POST'])
-def log_message():
-    # Get the incoming JSON data
-    data = request.json
-    print("[📥 Received JSON]", data)
-    
-    # Extract specific fields if they exist
-    device_id = data.get('device_id') if data else None
-    phone_number = data.get('phone_number') if data else None
-    message_type = data.get('message_type') if data else None
-    whatsapp_type = data.get('whatsapp_type') if data else None  # "normal" or "business"
-    timestamp = data.get('timestamp') if data else None
+def log_data():
+    data = request.get_json()
+    required = [
+        "device_id", "whatsapp_type", "number", "message_type", "timestamp"
+    ]
+    if not data or not all(field in data for field in required):
+        return jsonify({"error": "Missing or invalid data"}), 400
 
-    # Write data to CSV if we have the required fields
-    if device_id or phone_number or message_type or whatsapp_type or timestamp:
-        with open(csv_file, mode='a', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow([device_id, phone_number, message_type, whatsapp_type, timestamp])
+    filename = get_today_log_filename()
+    with open(filename, 'a', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        writer.writerow([
+            data['device_id'], data['whatsapp_type'], data['number'],
+            data['message_type'], data['timestamp']
+        ])
+    return jsonify({"status": "Logged successfully"}), 200
 
-    return {"status": "success"}, 200
 
-@app.route('/upload')
-def upload_logs():
-    # Placeholder for Google Drive upload functionality
-    return {"status": "Upload functionality coming soon!"}, 200
+@app.route('/download')
+def download():
+    filename = get_today_log_filename()
+    if os.path.exists(filename):
+        return send_file(filename, as_attachment=True)
+    return "No log found", 404
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=False)
+
+@app.route('/upload', methods=['POST'])
+def upload():
+    return jsonify({"status": "This will upload to Google Drive"}), 200
+
+
+if __name__ == '__main__':
+    ensure_log_file()
+    Thread(target=rotate_log_daily, daemon=True).start()
+    app.run(host='0.0.0.0', port=3001, debug=True)

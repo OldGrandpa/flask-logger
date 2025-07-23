@@ -1,0 +1,5 @@
+Device ID	WhatsApp Type	Number	Message Type	Timestamp
+gl-0001	normal	+923001234567	text	2025-07-23 19:14:00
+gl-0001	normal	+923001234567	text	2025-07-23 19:14:00
+gl-0001	normal	+923001234567	text	2025-07-23 19:14:00
+gl-0001	normal	+923001234567	text	2025-07-23 19:14:00
