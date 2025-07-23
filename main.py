@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, render_template
 import csv
 import os
 
@@ -14,6 +14,10 @@ if not os.path.exists(csv_file):
         writer.writerow(
             ["Device ID", "Phone Number", "Message Type", "Timestamp"])
 
+
+@app.route('/')
+def index():
+    return render_template('index.html')
 
 @app.route('/log', methods=['POST'])
 def log_message():
