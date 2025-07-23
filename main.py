@@ -1,47 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Daily WhatsApp Logs</title>
+</head>
+<body>
+    <h1>📋 Today's Logs</h1>
 
-import csv
-import os
+    <table border="1">
+        <tr>
+            <th>Device ID</th>
+            <th>Phone Number</th>
+            <th>Message Type</th>
+            <th>Timestamp</th>
+        </tr>
+        {% for row in logs %}
+        <tr>
+            <td>{{ row[0] }}</td>
+            <td>{{ row[1] }}</td>
+            <td>{{ row[2] }}</td>
+            <td>{{ row[3] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
 
-from flask import Flask, render_template, request
-
-app = Flask(__name__)
-
-# Path to store the CSV log file
-csv_file = "logs.csv"
-
-# Create the CSV file with headers if it doesn't exist
-if not os.path.exists(csv_file):
-    with open(csv_file, mode='w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(
-            ["Device ID", "Phone Number", "Message Type", "Timestamp"])
-
-
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-
-@app.route('/log', methods=['POST'])
-def log_message():
-    # Get the incoming JSON data
-    data = request.json
-    print("[📥 Received JSON]", data)
-    
-    # Extract specific fields if they exist
-    device_id = data.get('device_id') if data else None
-    phone_number = data.get('phone_number') if data else None
-    message_type = data.get('message_type') if data else None
-    timestamp = data.get('timestamp') if data else None
-
-    # Write data to CSV if we have the required fields
-    if device_id or phone_number or message_type or timestamp:
-        with open(csv_file, mode='a', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow([device_id, phone_number, message_type, timestamp])
-
-    return {"status": "success"}, 200
-
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    <br>
+    <form action="/upload">
+        <button type="submit">Upload Today's Log to Google Drive</button>
+    </form>
+</body>
+</html>
