@@ -1,56 +1,31 @@
-import csv
-import os
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Daily WhatsApp Logs</title>
+</head>
+<body>
+    <h1>📋 Today's Logs</h1>
 
-from flask import Flask, render_template, request
+    <table border="1">
+        <tr>
+            <th>Device ID</th>
+            <th>Phone Number</th>
+            <th>Message Type</th>
+            <th>Timestamp</th>
+        </tr>
+        {% for row in logs %}
+        <tr>
+            <td>{{ row[0] }}</td>
+            <td>{{ row[1] }}</td>
+            <td>{{ row[2] }}</td>
+            <td>{{ row[3] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
 
-app = Flask(__name__)
-
-# Path to store the CSV log file
-csv_file = "logs.csv"
-
-# Create the CSV file with headers if it doesn't exist
-if not os.path.exists(csv_file):
-    with open(csv_file, mode='w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(
-            ["Device ID", "Phone Number", "Message Type", "Timestamp"])
-
-
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-
-@app.route('/log', methods=['POST'])
-def log_message():
-    # Get data from the POST request
-    device_id = request.json.get('device_id')
-    phone_number = request.json.get('phone_number')
-    message_type = request.json.get('message_type')
-    timestamp = request.json.get('timestamp')
-
-    # Write data to CSV
-    with open(csv_file, mode='a', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow([device_id, phone_number, message_type, timestamp])
-
-    return {"status": "success"}, 200
-
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
-
-
-@app.route('/log', methods=['POST'])
-def log_data():
-    data = request.json
-    print("[📥 Received JSON]", data)
-    return 'OK', 200
-
-
-@app.route('/log', methods=['POST'])
-def log_data():
-    data = request.json
-    print("[📥 Received JSON]",
-          data)  # This will show the incoming data in terminal
-    return 'OK', 200
+    <br>
+    <form action="/upload">
+        <button type="submit">Upload Today's Log to Google Drive</button>
+    </form>
+</body>
+</html>
