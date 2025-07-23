@@ -13,7 +13,7 @@ if not os.path.exists(csv_file):
     with open(csv_file, mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(
-            ["Device ID", "Phone Number", "Message Type", "Timestamp"])
+            ["Device ID", "Phone Number", "Message Type", "WhatsApp Type", "Timestamp"])
 
 @app.route('/')
 def index():
@@ -37,13 +37,14 @@ def log_message():
     device_id = data.get('device_id') if data else None
     phone_number = data.get('phone_number') if data else None
     message_type = data.get('message_type') if data else None
+    whatsapp_type = data.get('whatsapp_type') if data else None  # "normal" or "business"
     timestamp = data.get('timestamp') if data else None
 
     # Write data to CSV if we have the required fields
-    if device_id or phone_number or message_type or timestamp:
+    if device_id or phone_number or message_type or whatsapp_type or timestamp:
         with open(csv_file, mode='a', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow([device_id, phone_number, message_type, timestamp])
+            writer.writerow([device_id, phone_number, message_type, whatsapp_type, timestamp])
 
     return {"status": "success"}, 200
 
