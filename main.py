@@ -19,6 +19,7 @@ if not os.path.exists(csv_file):
 def index():
     return render_template('index.html')
 
+
 @app.route('/log', methods=['POST'])
 def log_message():
     # Get data from the POST request
@@ -36,4 +37,4 @@ def log_message():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=81)
