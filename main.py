@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, render_template
 import csv
 import os
 
@@ -13,6 +13,11 @@ if not os.path.exists(csv_file):
         writer = csv.writer(file)
         writer.writerow(
             ["Device ID", "Phone Number", "Message Type", "Timestamp"])
+
+
+@app.route('/')
+def index():
+    return render_template('index.html')
 
 
 @app.route('/log', methods=['POST'])
@@ -32,4 +37,4 @@ def log_message():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=81)
