@@ -1,3 +1,4 @@
+
 import csv
 import os
 
@@ -23,34 +24,24 @@ def index():
 
 @app.route('/log', methods=['POST'])
 def log_message():
-    # Get data from the POST request
-    device_id = request.json.get('device_id')
-    phone_number = request.json.get('phone_number')
-    message_type = request.json.get('message_type')
-    timestamp = request.json.get('timestamp')
+    # Get the incoming JSON data
+    data = request.json
+    print("[📥 Received JSON]", data)
+    
+    # Extract specific fields if they exist
+    device_id = data.get('device_id') if data else None
+    phone_number = data.get('phone_number') if data else None
+    message_type = data.get('message_type') if data else None
+    timestamp = data.get('timestamp') if data else None
 
-    # Write data to CSV
-    with open(csv_file, mode='a', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow([device_id, phone_number, message_type, timestamp])
+    # Write data to CSV if we have the required fields
+    if device_id or phone_number or message_type or timestamp:
+        with open(csv_file, mode='a', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow([device_id, phone_number, message_type, timestamp])
 
     return {"status": "success"}, 200
 
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-
-
-@app.route('/log', methods=['POST'])
-def log_data():
-    data = request.json
-    print("[📥 Received JSON]", data)
-    return 'OK', 200
-
-
-@app.route('/log', methods=['POST'])
-def log_data():
-    data = request.json
-    print("[📥 Received JSON]",
-          data)  # This will show the incoming data in terminal
-    return 'OK', 200
